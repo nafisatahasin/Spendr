@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spendr - Personalized Finance Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to right, #f5f7fa, #c3cfe2);
+            color: #333;
+            overflow-x: hidden;
+        }
+        header {
+            background: #4caf50;
+            color: #fff;
+            text-align: center;
+            padding: 1.5rem 0;
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .section {
+            padding: 2rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section h2 {
+            font-size: 1.8rem;
+            color: #4caf50;
+            margin-bottom: 1rem;
+        }
+        .visualization {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .visualization img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        .visualization img:hover {
+            transform: scale(1.05);
+        }
+        footer {
+            background: #4caf50;
+            color: #fff;
+            text-align: center;
+            padding: 1.5rem 0;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-top: 2rem;
+        }
+        @media (max-width: 768px) {
+            .section h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>Spendr - Personalized Finance Manager</header>
+    <div class="container">
+        <div class="section">
+            <h2>Monthly Spending Trends</h2>
+            <div class="visualization">
+                <img src="{{ visualizations['monthly_trends'] }}" alt="Monthly Spending Trends">
+            </div>
+        </div>
+        <div class="section">
+            <h2>Category-Wise Breakdown</h2>
+            <div class="visualization">
+                <img src="{{ visualizations['category_breakdown'] }}" alt="Category Breakdown">
+            </div>
+        </div>
+        <div class="section">
+            <h2>Payment Mode Analysis</h2>
+            <div class="visualization">
+                <img src="{{ visualizations['payment_modes'] }}" alt="Payment Modes">
+            </div>
+        </div>
+        <div class="section">
+            <h2>Spending Heatmap</h2>
+            <div class="visualization">
+                <img src="{{ visualizations['spending_heatmap'] }}" alt="Spending Heatmap">
+            </div>
+        </div>
+        <div class="section">
+            <h2>Category-Wise Spending (Pie Chart)</h2>
+            <div class="visualization">
+                <img src="{{ visualizations['category_pie'] }}" alt="Category Pie Chart">
+            </div>
+        </div>
+    </div>
+    <footer>&copy; 2025 Spendr. All Rights Reserved. Designed for Smarter Finances.</footer>
+</body>
+</html>
+
