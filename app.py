@@ -6,7 +6,7 @@ import os
 
 app = Flask(__name__)
 
-# Ensure the static folder exists
+# Ensure static folder exists
 os.makedirs("static", exist_ok=True)
 
 # Load and preprocess data
@@ -18,12 +18,11 @@ def load_and_preprocess_data():
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
     df = df.dropna(subset=['Date'])
 
-    # Add YearMonth column
+    # Extract additional date-based features
     df['YearMonth'] = df['Date'].dt.to_period('M')
-
-    # Add Year and Month for heatmap
     df['Year'] = df['Date'].dt.year
     df['Month'] = df['Date'].dt.month
+    df['Quarter'] = df['Date'].dt.to_period('Q')
 
     return df
 
@@ -33,10 +32,10 @@ def generate_visualizations(df):
     monthly_spending = df[df['Income/Expense'] == 'Expense'].groupby('YearMonth')['Amount'].sum()
     plt.figure(figsize=(10, 5))
     plt.plot(monthly_spending.index.astype(str), monthly_spending.values, marker='o', linestyle='-', color='b')
-    plt.title('Monthly Spending Trends', fontsize=14)
-    plt.xlabel('Month', fontsize=10)
-    plt.ylabel('Total Spending (INR)', fontsize=10)
-    plt.xticks(rotation=45, fontsize=8)
+    plt.title('Monthly Spending Trends')
+    plt.xlabel('Month')
+    plt.ylabel('Total Spending (INR)')
+    plt.xticks(rotation=45)
     plt.grid(alpha=0.5)
     plt.tight_layout()
     plt.savefig('static/monthly_spending_trends.png')
@@ -46,9 +45,9 @@ def generate_visualizations(df):
     category_spending = df[df['Income/Expense'] == 'Expense'].groupby('Category')['Amount'].sum().sort_values(ascending=False)
     plt.figure(figsize=(9, 6))
     sns.barplot(x=category_spending.values, y=category_spending.index, palette='viridis', orient='h')
-    plt.title('Category-Wise Breakdown of Expenses', fontsize=14)
-    plt.xlabel('Total Spending (INR)', fontsize=10)
-    plt.ylabel('Category', fontsize=10)
+    plt.title('Category-Wise Breakdown of Expenses')
+    plt.xlabel('Total Spending (INR)')
+    plt.ylabel('Category')
     plt.tight_layout()
     plt.savefig('static/category_breakdown.png')
     plt.close()
@@ -57,9 +56,9 @@ def generate_visualizations(df):
     payment_modes = df.groupby('Mode')['Amount'].sum()
     plt.figure(figsize=(9, 5))
     sns.barplot(x=payment_modes.values, y=payment_modes.index, palette='coolwarm', orient='h')
-    plt.title('Payment Mode Distribution', fontsize=14)
-    plt.xlabel('Total Amount (INR)', fontsize=10)
-    plt.ylabel('Mode', fontsize=10)
+    plt.title('Payment Mode Distribution')
+    plt.xlabel('Total Amount (INR)')
+    plt.ylabel('Mode')
     plt.tight_layout()
     plt.savefig('static/payment_mode_analysis.png')
     plt.close()
@@ -69,54 +68,86 @@ def generate_visualizations(df):
         index='Year', columns='Month', values='Amount', aggfunc='sum', fill_value=0)
     plt.figure(figsize=(10, 6))
     sns.heatmap(heatmap_data, annot=True, fmt=".0f", cmap="YlGnBu", linewidths=0.5)
-    plt.title('Heatmap of Monthly Spending by Year', fontsize=14)
-    plt.xlabel('Month', fontsize=10)
-    plt.ylabel('Year', fontsize=10)
+    plt.title('Heatmap of Monthly Spending by Year')
+    plt.xlabel('Month')
+    plt.ylabel('Year')
     plt.tight_layout()
     plt.savefig('static/spending_heatmap.png')
     plt.close()
 
-    # Category-Wise Spending (Pie Chart)
+    # Category-Wise Spending (Pie Chart) - Without `adjust_text`
     category_pie = df[df['Income/Expense'] == 'Expense'].groupby('Category')['Amount'].sum()
     plt.figure(figsize=(8, 8))
     colors = sns.color_palette('pastel')
     wedges, texts, autotexts = plt.pie(
-        category_pie, labels=category_pie.index, autopct='%1.1f%%',
+        category_pie, labels=category_pie.index, autopct=lambda p: '{:.1f}%'.format(p) if p > 5 else '',
         startangle=140, colors=colors, pctdistance=0.85, wedgeprops={'edgecolor': 'black'})
     
-    for text in texts:
-        text.set_fontsize(9)
-        text.set_fontweight('bold')
-    for autotext in autotexts:
-        autotext.set_fontsize(10)
-        autotext.set_fontweight('bold')
-        autotext.set_color('black')
+    # Improve text visibility
+    for text in texts + autotexts:
+        text.set_bbox(dict(facecolor='white', alpha=0.6, edgecolor='none'))
     
-    plt.gca().add_artist(plt.Circle((0,0),0.70,fc='white'))  # Create a donut effect
-    plt.title('Category-Wise Spending Distribution', fontsize=14)
+    plt.title('Category-Wise Spending Distribution')
     plt.tight_layout()
     plt.savefig('static/category_pie_chart.png')
     plt.close()
 
-# Route to render the dashboard
+    # Yearly Spending Analysis
+    yearly_expense = df[df['Income/Expense'] == 'Expense'].groupby('Year')['Amount'].sum().reset_index()
+    plt.figure(figsize=(8, 5))
+    sns.barplot(data=yearly_expense, x='Year', y='Amount', palette='pastel')
+    plt.xlabel('Year')
+    plt.ylabel('Total Spending')
+    plt.title('Yearly Spending Analysis')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.savefig('static/yearly_spending.png')
+    plt.close()
+
+    # Quarterly Spending Analysis
+    quarterly_expense = df[df['Income/Expense'] == 'Expense'].groupby('Quarter')['Amount'].sum().reset_index()
+    plt.figure(figsize=(8, 5))
+    sns.barplot(data=quarterly_expense, x='Quarter', y='Amount', palette='pastel')
+    plt.xlabel('Quarter')
+    plt.ylabel('Total Spending')
+    plt.title('Quarterly Spending Analysis')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.savefig('static/quarterly_spending.png')
+    plt.close()
+    
+    # Category-Wise Spending Over Time
+    category_monthly = df[df['Income/Expense'] == 'Expense'].groupby(['YearMonth', 'Category'])['Amount'].sum().unstack().fillna(0)
+    category_monthly.index = category_monthly.index.astype(str)
+    plt.figure(figsize=(12, 6))
+    plt.stackplot(category_monthly.index, category_monthly.T, labels=category_monthly.columns, alpha=0.7)
+    plt.legend(loc='upper left')
+    plt.xlabel('Month')
+    plt.ylabel('Total Spending')
+    plt.title('Category-Wise Spending Over Time')
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig('static/category_over_time.png')
+    plt.close()
+
+# Flask Route
 @app.route('/')
 def index():
-    # Load and preprocess data
     df = load_and_preprocess_data()
-
-    # Generate visualizations
     generate_visualizations(df)
-
-    # Pass the paths to the visualizations
     visualizations = {
         'monthly_trends': '/static/monthly_spending_trends.png',
         'category_breakdown': '/static/category_breakdown.png',
         'payment_modes': '/static/payment_mode_analysis.png',
         'spending_heatmap': '/static/spending_heatmap.png',
-        'category_pie': '/static/category_pie_chart.png'
+        'category_pie': '/static/category_pie_chart.png',
+        'yearly_spending': '/static/yearly_spending.png',
+        'quarterly_spending': '/static/quarterly_spending.png',
+        'category_over_time': '/static/category_over_time.png'
     }
-
     return render_template('index.html', visualizations=visualizations)
 
 if __name__ == '__main__':
     app.run(debug=True)
+
